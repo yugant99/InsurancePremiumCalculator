@@ -1,0 +1,71 @@
+{
+  "selected_features": [
+    "INSURED_VALUE",
+    "USAGE",
+    "CCM_TON",
+    "SEATS_NUM",
+    "CARRYING_CAPACITY",
+    "PROD_YEAR",
+    "TYPE_VEHICLE",
+    "MAKE",
+    "SEX",
+    "HAS_CLAIM"
+  ],
+  "feature_importance": [
+    {
+      "feature": "INSURED_VALUE",
+      "importance": 0.6176368558492065
+    },
+    {
+      "feature": "USAGE",
+      "importance": 0.14496670651788096
+    },
+    {
+      "feature": "CCM_TON",
+      "importance": 0.06268689554712656
+    },
+    {
+      "feature": "SEATS_NUM",
+      "importance": 0.04508232491925865
+    },
+    {
+      "feature": "CARRYING_CAPACITY",
+      "importance": 0.04166886410894583
+    },
+    {
+      "feature": "PROD_YEAR",
+      "importance": 0.038363245607018995
+    },
+    {
+      "feature": "TYPE_VEHICLE",
+      "importance": 0.019162769456622365
+    },
+    {
+      "feature": "MAKE",
+      "importance": 0.016212462526473702
+    },
+    {
+      "feature": "SEX",
+      "importance": 0.014219567593444853
+    },
+    {
+      "feature": "HAS_CLAIM",
+      "importance": 3.078740216340648e-07
+    }
+  ],
+  "categorical_cols": [
+    "TYPE_VEHICLE",
+    "MAKE",
+    "USAGE"
+  ],
+  "numeric_cols": [
+    "INSURED_VALUE",
+    "CCM_TON",
+    "SEATS_NUM",
+    "CARRYING_CAPACITY",
+    "PROD_YEAR",
+    "SEX",
+    "HAS_CLAIM"
+  ],
+  "target_col": "PREMIUM"
+}
