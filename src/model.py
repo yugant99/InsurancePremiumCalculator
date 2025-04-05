@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
+import xgboost as xgb
 import os
 import pickle
 import json
 from datetime import datetime
+from xgboost import XGBRegressor
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
@@ -176,17 +178,27 @@ def train_model(data_path, model_type='random_forest', feature_selection=True):
     
     # Train model based on specified type
     print(f"Training {model_type} model...")
-    if model_type == 'linear':
-        model = LinearRegression()
-    elif model_type == 'gradient_boosting':
-        model = GradientBoostingRegressor(
+    match model_type:
+
+        case 'linear':
+          model = LinearRegression()
+
+        case 'x_gradient_boosting':
+          model = XGBRegressor(
             n_estimators=100,
             learning_rate=0.1,
             max_depth=5,
             random_state=42
         )
-    else:  # Default to random forest
-        model = RandomForestRegressor(
+        case 'gradient_boosting':
+          model = GradientBoostingRegressor(
+            n_estimators=100,
+            learning_rate=0.1,
+            max_depth=5,
+            random_state=42
+        )
+        case 'random_forest':
+           model = RandomForestRegressor(
             n_estimators=100,
             max_depth=15,
             min_samples_split=5,
@@ -283,7 +295,7 @@ def compare_models(data_path):
     """
     print("Comparing different model types...")
     
-    model_types = ['linear', 'random_forest', 'gradient_boosting']
+    model_types = ['linear', 'x_gradient_boosting','gradient_boosting','random_forest']
     results = {}
     
     for model_type in model_types:
@@ -391,7 +403,7 @@ def predict_premium(input_data):
 
 if __name__ == "__main__":
     # Example usage
-    data_path = '/Users/yuganthareshsoni/InsurancePremiumPredictor/data/insurance_cleaned_colab.csv'
+    data_path = '/Users/crystalwang/Downloads/github/InsurancePremiumCalculator/data/insurance_cleaned_colab.csv'
     
     # Train a single model
     # result = train_model(data_path, model_type='random_forest')
