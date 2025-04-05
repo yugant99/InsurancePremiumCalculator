@@ -1,0 +1,15 @@
+{
+  "model_name": "gradient_boosting_20250325_211800",
+  "model_type": "gradient_boosting",
+  "timestamp": "20250325_211800",
+  "metrics": {
+    "rmse": 3825.94750236698,
+    "mae": 1802.3406144178152,
+    "r2": 0.8186252889170356
+  },
+  "feature_selection": true,
+  "n_features": 10,
+  "model_path": "/Users/yuganthareshsoni/InsurancePremiumPredictor/models/gradient_boosting_20250325_211800.pkl",
+  "feature_info_path": "/Users/yuganthareshsoni/InsurancePremiumPredictor/models/feature_info.json",
+  "encoder_path": "/Users/yuganthareshsoni/InsurancePremiumPredictor/models/label_encoders.pkl"
+}

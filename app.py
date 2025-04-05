@@ -2,6 +2,19 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import certifi
+import os 
+from dotenv import load_dotenv
+
+
+# Try importing MongoDB, with fallback for missing package
+try:
+    from pymongo import MongoClient
+    MONGODB_AVAILABLE = True
+except ImportError:
+    MONGODB_AVAILABLE = False
+    print("MongoDB support unavailable. Will use CSV data source.")
+
 from src.visualization import (
     create_premium_by_vehicle_type_chart,
     create_premium_by_year_chart,
@@ -18,6 +31,7 @@ from src.visualization import (
 )
 from src.model import predict_premium, load_model_for_prediction
 
+
 # Set page config
 st.set_page_config(
     page_title="Insurance Premium Predictor",
@@ -27,10 +41,43 @@ st.set_page_config(
 )
 
 # Load data
-@st.cache_data
+@st.cache_data(ttl=600)  # Cache for 10 minutes with time-to-live
 def load_data():
     """Load the preprocessed insurance data"""
-    return pd.read_csv('/Users/yuganthareshsoni/InsurancePremiumPredictor/data/insurance_cleaned_colab.csv')
+    # Try MongoDB first if available
+    if MONGODB_AVAILABLE:
+        try:
+            # Connect to MongoDB Atlas
+            connection_string = os.getenv('MONGODB_URI', 'mongodb+srv://yugs99:yugant99@cluster1.tv55vep.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1')
+            client = MongoClient(connection_string, tlsCAFile=certifi.where())
+            
+            # Access database and collection
+            db = client['motor_insurance']
+            collection = db['processed_motor_data']
+            
+            # Query all documents and convert to DataFrame
+            cursor = collection.find({})
+            df = pd.DataFrame(list(cursor))
+            
+            # Drop MongoDB's _id field if it exists
+            if '_id' in df.columns:
+                df = df.drop('_id', axis=1)
+            
+            # Close connection
+            client.close()
+            
+            if len(df) > 0:
+                st.session_state['data_source'] = 'MongoDB Atlas'
+                print(f"Successfully loaded {len(df)} records from MongoDB")
+                return df
+            else:
+                print("MongoDB returned empty dataset, falling back to CSV")
+        except Exception as e:
+            print(f"MongoDB connection error: {str(e)}. Falling back to CSV.")
+    
+    # Fall back to CSV if MongoDB failed or wasn't available
+    st.session_state['data_source'] = 'Local CSV'
+    return pd.read_csv(os.path.join('data', 'insurance_cleaned_colab.csv'))
 
 # Custom CSS
 def apply_custom_css():
@@ -80,6 +127,16 @@ def apply_custom_css():
         font-weight: 700 !important;
         color: #0D47A1 !important;
     }
+    .data-source {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        background-color: #E8F5E9;
+        color: #2E7D32;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -91,7 +148,7 @@ def render_landing_page():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.image("/Users/yuganthareshsoni/InsurancePremiumPredictor/landing_image.webp", use_column_width=True)
+        st.image(os.path.join(".", "landing_image.webp"), use_column_width=True)
         
         st.markdown("""
         <div class="card">
@@ -163,7 +220,10 @@ def render_dashboard(df):
         categorical_cols = ['TYPE_VEHICLE', 'MAKE', 'USAGE', 'EFFECTIVE_YR']
         cat_summary = {}
         for col in categorical_cols:
-            cat_summary[col] = df[col].value_counts().nlargest(5).to_dict()
+            if col in df.columns:
+                cat_summary[col] = df[col].value_counts().nlargest(5).to_dict()
+            else:
+                cat_summary[col] = {"Column not found": 0}
         
         st.json(cat_summary)
     
@@ -514,10 +574,13 @@ def main():
     if 'page' not in st.session_state:
         st.session_state.page = "landing"
     
+    if 'data_source' not in st.session_state:
+        st.session_state['data_source'] = "Not loaded"
+    
     # Sidebar navigation
     with st.sidebar:
         st.title("Insurance Premium Predictor")
-        st.image("/Users/yuganthareshsoni/InsurancePremiumPredictor/ferrari.webp", use_column_width=True)
+        st.image(os.path.join(".", "ferrari.webp"), use_column_width=True)
         
         st.markdown("---")
         
@@ -547,6 +610,12 @@ def main():
         This dashboard provides comprehensive analysis of vehicle insurance data, 
         allowing users to explore trends and predict premiums based on various factors.
         """)
+        
+        # Display data source
+        st.markdown("---")
+        st.markdown("### Data Source")
+        if 'data_source' in st.session_state:
+            st.info(f"Data loaded from: {st.session_state['data_source']}")
     
     # Conditional rendering based on the current page
     if st.session_state.page == "landing":
@@ -563,6 +632,13 @@ def main():
             render_custom_view(df)
         elif st.session_state.page == "predictor":
             render_premium_predictor(df)
+    
+    # Display data source indicator
+    if 'data_source' in st.session_state and st.session_state.page != "landing":
+        st.markdown(
+            f'<div class="data-source">Data source: {st.session_state["data_source"]}</div>',
+            unsafe_allow_html=True
+        )
 
 if __name__ == "__main__":
     main()
